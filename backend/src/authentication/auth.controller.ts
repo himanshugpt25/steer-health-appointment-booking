@@ -37,7 +37,6 @@ class AuthController {
 
   async login(req: Request, res: Response) {
     const { email, password } = req.body;
-
     if (!email || !password) {
       throw new ValidationError("Missing required fields");
     }
