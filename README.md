@@ -203,6 +203,7 @@ Content-Type: application/json
   "weeklySchedule": [
     {
       "dayOfWeek": 1, // Monday
+      "isWorkingDay": true
       "timeSlots": [
         {
           "startTime": "09:00",
@@ -213,6 +214,7 @@ Content-Type: application/json
     },
     {
       "dayOfWeek": 2, // Tuesday
+      "isWorkingDay": false
       "timeSlots": [
         {
           "startTime": "09:00",
