@@ -111,6 +111,344 @@ A modern appointment booking system built with Next.js, Express, and MongoDB, fe
 - TypeScript
 - React Query
 
+## 🔌 Backend API Documentation
+
+> ⚠️ **IMPORTANT: Doctor Setup Required**
+>
+> Before patients can book appointments, the following setup is required:
+>
+> 1. Create a doctor account using `/auth/register` with `role: "doctor"`
+> 2. Set up doctor's availability using `POST /availability`
+>
+> Without these steps, no slots will be available for booking in the frontend application.
+
+### Authentication APIs
+
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "email": "doctor@example.com",
+  "password": "securePassword123",
+  "username": "Dr. John Smith",
+  "role": "doctor"
+}
+
+Response:
+{
+  "user": {
+    "id": "user_id",
+    "email": "doctor@example.com",
+    "username": "Dr. John Smith",
+    "role": "doctor"
+  },
+  "accessToken": "jwt_access_token",
+  "refreshToken": "jwt_refresh_token"
+}
+
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "doctor@example.com",
+  "password": "securePassword123"
+}
+
+Response:
+{
+  "user": {
+    "id": "user_id",
+    "email": "doctor@example.com",
+    "username": "Dr. John Smith",
+    "role": "doctor"
+  },
+  "accessToken": "jwt_access_token",
+  "refreshToken": "jwt_refresh_token"
+}
+
+GET /auth/refresh
+Authorization: Bearer <refresh_token>
+
+Response:
+{
+  "accessToken": "new_jwt_access_token"
+}
+```
+
+### User APIs
+
+```http
+GET /users/doctors
+Authorization: Bearer <access_token>
+
+Response:
+[
+  {
+    "id": "doctor_id",
+    "username": "Dr. John Smith",
+    "email": "doctor@example.com"
+  }
+]
+```
+
+### Availability APIs
+
+```http
+POST /availability
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "weeklySchedule": [
+    {
+      "dayOfWeek": 1, // Monday
+      "timeSlots": [
+        {
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "dayOfWeek": 2, // Tuesday
+      "timeSlots": [
+        {
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "isAvailable": true
+        }
+      ]
+    }
+  ],
+  "unavailableDates": ["2024-03-25", "2024-03-26"],
+  "slotDuration": 30,
+  "timezone": "America/New_York"
+}
+
+Response:
+{
+  "id": "availability_id",
+  "doctorId": "doctor_id",
+  "weeklySchedule": [...],
+  "unavailableDates": [...],
+  "slotDuration": 30,
+  "timezone": "America/New_York",
+  "createdAt": "2024-03-20T10:00:00Z",
+  "updatedAt": "2024-03-20T10:00:00Z"
+}
+
+GET /availability/:doctorId
+Authorization: Bearer <access_token>
+
+Response:
+{
+  "id": "availability_id",
+  "doctorId": "doctor_id",
+  "weeklySchedule": [...],
+  "unavailableDates": [...],
+  "slotDuration": 30,
+  "timezone": "America/New_York",
+  "createdAt": "2024-03-20T10:00:00Z",
+  "updatedAt": "2024-03-20T10:00:00Z"
+}
+
+GET /availability/:doctorId/slots
+Authorization: Bearer <access_token>
+Query Parameters:
+  - date: 2024-03-25
+  - timezone: America/New_York
+
+Response:
+[
+  {
+    "startTime": "09:00",
+    "endTime": "09:30",
+    "isAvailable": true
+  },
+  {
+    "startTime": "09:30",
+    "endTime": "10:00",
+    "isAvailable": false
+  }
+]
+
+PATCH /availability
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "weeklySchedule": [
+    {
+      "dayOfWeek": 1,
+      "timeSlots": [
+        {
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "isAvailable": true
+        }
+      ]
+    }
+  ],
+  "unavailableDates": ["2024-03-27"],
+  "slotDuration": 45
+}
+
+Response:
+{
+  "id": "availability_id",
+  "doctorId": "doctor_id",
+  "weeklySchedule": [...],
+  "unavailableDates": [...],
+  "slotDuration": 45,
+  "timezone": "America/New_York",
+  "updatedAt": "2024-03-20T11:00:00Z"
+}
+```
+
+### Booking APIs
+
+```http
+POST /bookings
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "doctorId": "doctor_id",
+  "date": "2024-03-25",
+  "startTime": "09:00",
+  "endTime": "09:30",
+  "timezone": "America/New_York",
+  "reason": "Regular checkup",
+  "notes": "First visit"
+}
+
+Response:
+{
+  "id": "booking_id",
+  "doctorId": "doctor_id",
+  "patientId": "patient_id",
+  "date": "2024-03-25",
+  "startTime": "09:00",
+  "endTime": "09:30",
+  "status": "pending",
+  "reason": "Regular checkup",
+  "notes": "First visit",
+  "timezone": "America/New_York",
+  "createdAt": "2024-03-20T10:00:00Z",
+  "updatedAt": "2024-03-20T10:00:00Z"
+}
+
+GET /bookings/:id
+Authorization: Bearer <access_token>
+
+Response:
+{
+  "id": "booking_id",
+  "doctorId": "doctor_id",
+  "patientId": "patient_id",
+  "date": "2024-03-25",
+  "startTime": "09:00",
+  "endTime": "09:30",
+  "status": "confirmed",
+  "reason": "Regular checkup",
+  "notes": "First visit",
+  "timezone": "America/New_York",
+  "createdAt": "2024-03-20T10:00:00Z",
+  "updatedAt": "2024-03-20T10:00:00Z"
+}
+
+GET /bookings/doctor/:doctorId
+Authorization: Bearer <access_token>
+
+Response:
+[
+  {
+    "id": "booking_id",
+    "doctorId": "doctor_id",
+    "patientId": "patient_id",
+    "date": "2024-03-25",
+    "startTime": "09:00",
+    "endTime": "09:30",
+    "status": "confirmed",
+    "reason": "Regular checkup",
+    "notes": "First visit",
+    "timezone": "America/New_York",
+    "createdAt": "2024-03-20T10:00:00Z",
+    "updatedAt": "2024-03-20T10:00:00Z"
+  }
+]
+
+GET /bookings/patient/me
+Authorization: Bearer <access_token>
+
+Response:
+[
+  {
+    "id": "booking_id",
+    "doctorId": "doctor_id",
+    "doctorName": "Dr. John Smith",
+    "date": "2024-03-25",
+    "startTime": "09:00",
+    "endTime": "09:30",
+    "status": "confirmed",
+    "reason": "Regular checkup",
+    "notes": "First visit",
+    "timezone": "America/New_York",
+    "createdAt": "2024-03-20T10:00:00Z",
+    "updatedAt": "2024-03-20T10:00:00Z"
+  }
+]
+
+PATCH /bookings/:id/status
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "status": "confirmed"
+}
+
+Response:
+{
+  "id": "booking_id",
+  "status": "confirmed",
+  "updatedAt": "2024-03-20T11:00:00Z"
+}
+```
+
+### Authentication & Authorization
+
+- All protected routes require a valid JWT access token
+- Access tokens are obtained through login or registration
+- Refresh tokens are used to obtain new access tokens
+- Role-based access control is implemented for certain endpoints
+
+### Error Responses
+
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable error message"
+  }
+}
+```
+
+Common error codes:
+
+- `VALIDATION_ERROR`: Invalid request data
+- `UNAUTHORIZED`: Missing or invalid authentication
+- `FORBIDDEN`: Insufficient permissions
+- `NOT_FOUND`: Resource not found
+- `CONFLICT`: Resource conflict (e.g., double booking)
+
+### Rate Limiting
+
+- API endpoints are rate-limited to prevent abuse
+- Rate limits are applied per IP and per user
+- Exceeding rate limits returns 429 Too Many Requests
+
 ## 📋 Project Requirements & Implementation
 
 ### Authentication Flow
